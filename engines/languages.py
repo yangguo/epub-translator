@@ -1,0 +1,71 @@
+"""Language code dictionaries for translation engines."""
+
+# Google Translate language codes
+GOOGLE_LANGS = {
+    'Abkhaz': 'ab', 'Afrikaans': 'af', 'Albanian': 'sq', 'Amharic': 'am',
+    'Arabic': 'ar', 'Armenian': 'hy', 'Azerbaijani': 'az',
+    'Basque': 'eu', 'Belarusian': 'be', 'Bengali': 'bn',
+    'Bosnian': 'bs', 'Bulgarian': 'bg', 'Cantonese': 'yue',
+    'Catalan': 'ca', 'Cebuano': 'ceb', 'Chinese (Simplified)': 'zh-CN',
+    'Chinese (Traditional)': 'zh-TW', 'Corsican': 'co', 'Croatian': 'hr',
+    'Czech': 'cs', 'Danish': 'da', 'Dutch': 'nl', 'English': 'en',
+    'Esperanto': 'eo', 'Estonian': 'et', 'Filipino': 'tl',
+    'Finnish': 'fi', 'French': 'fr', 'Galician': 'gl', 'Georgian': 'ka',
+    'German': 'de', 'Greek': 'el', 'Gujarati': 'gu',
+    'Haitian Creole': 'ht', 'Hausa': 'ha', 'Hawaiian': 'haw',
+    'Hebrew': 'iw', 'Hindi': 'hi', 'Hmong': 'hmn', 'Hungarian': 'hu',
+    'Icelandic': 'is', 'Igbo': 'ig', 'Indonesian': 'id', 'Irish': 'ga',
+    'Italian': 'it', 'Japanese': 'ja', 'Javanese': 'jw',
+    'Kannada': 'kn', 'Kazakh': 'kk', 'Khmer': 'km', 'Korean': 'ko',
+    'Kurdish (Kurmanji)': 'ku', 'Kyrgyz': 'ky', 'Lao': 'lo',
+    'Latin': 'la', 'Latvian': 'lv', 'Lithuanian': 'lt',
+    'Luxembourgish': 'lb', 'Macedonian': 'mk', 'Malagasy': 'mg',
+    'Malay': 'ms', 'Malayalam': 'ml', 'Maltese': 'mt', 'Maori': 'mi',
+    'Marathi': 'mr', 'Mongolian': 'mn', 'Myanmar (Burmese)': 'my',
+    'Nepali': 'ne', 'Norwegian': 'no', 'Odia (Oriya)': 'or',
+    'Pashto': 'ps', 'Persian': 'fa', 'Polish': 'pl',
+    'Portuguese (Brazil)': 'pt', 'Portuguese (Portugal)': 'pt-PT',
+    'Punjabi (Gurmukhi)': 'pa', 'Romanian': 'ro', 'Russian': 'ru',
+    'Samoan': 'sm', 'Scots Gaelic': 'gd', 'Serbian': 'sr',
+    'Sesotho': 'st', 'Shona': 'sn', 'Sindhi': 'sd', 'Sinhala': 'si',
+    'Slovak': 'sk', 'Slovenian': 'sl', 'Somali': 'so', 'Spanish': 'es',
+    'Sundanese': 'su', 'Swahili': 'sw', 'Swedish': 'sv', 'Tajik': 'tg',
+    'Tamil': 'ta', 'Tatar': 'tt', 'Telugu': 'te', 'Thai': 'th',
+    'Turkish': 'tr', 'Turkmen': 'tk', 'Ukrainian': 'uk', 'Urdu': 'ur',
+    'Uyghur': 'ug', 'Uzbek': 'uz', 'Vietnamese': 'vi', 'Welsh': 'cy',
+    'Xhosa': 'xh', 'Yiddish': 'yi', 'Yoruba': 'yo', 'Zulu': 'zu',
+}
+
+# DeepL source language codes
+DEEPL_SOURCE_LANGS = {
+    'Arabic': 'AR', 'Bulgarian': 'BG', 'Czech': 'CS', 'Danish': 'DA',
+    'German': 'DE', 'Greek': 'EL', 'English': 'EN',
+    'English (all variants)': 'EN', 'Spanish': 'ES', 'Estonian': 'ET',
+    'Finnish': 'FI', 'French': 'FR', 'Hungarian': 'HU',
+    'Indonesian': 'ID', 'Italian': 'IT', 'Japanese': 'JA',
+    'Korean': 'KO', 'Lithuanian': 'LT', 'Latvian': 'LV',
+    'Norwegian': 'NB', 'Dutch': 'NL', 'Polish': 'PL',
+    'Portuguese': 'PT', 'Portuguese (all variants)': 'PT',
+    'Romanian': 'RO', 'Russian': 'RU', 'Slovak': 'SK',
+    'Slovenian': 'SL', 'Swedish': 'SV', 'Turkish': 'TR',
+    'Ukrainian': 'UK', 'Chinese': 'ZH', 'Chinese (all variants)': 'ZH',
+}
+
+# DeepL target language codes
+DEEPL_TARGET_LANGS = {
+    'Arabic': 'AR', 'Bulgarian': 'BG', 'Czech': 'CS', 'Danish': 'DA',
+    'German': 'DE', 'Greek': 'EL', 'English': 'EN',
+    'English (British)': 'EN-GB', 'English (American)': 'EN-US',
+    'Spanish': 'ES', 'Estonian': 'ET', 'Finnish': 'FI', 'French': 'FR',
+    'Hungarian': 'HU', 'Indonesian': 'ID', 'Italian': 'IT',
+    'Japanese': 'JA', 'Korean': 'KO', 'Lithuanian': 'LT',
+    'Latvian': 'LV', 'Norwegian': 'NB', 'Dutch': 'NL', 'Polish': 'PL',
+    'Portuguese': 'PT', 'Portuguese (Brazilian)': 'PT-BR',
+    'Portuguese (international)': 'PT-PT', 'Romanian': 'RO',
+    'Russian': 'RU', 'Slovak': 'SK', 'Slovenian': 'SL',
+    'Swedish': 'SV', 'Turkish': 'TR', 'Ukrainian': 'UK',
+    'Chinese': 'ZH', 'Chinese (simplified)': 'ZH-HANS',
+    'Chinese (Simplified)': 'ZH-HANS',
+    'Chinese (traditional)': 'ZH-HANT',
+    'Chinese (Traditional)': 'ZH-HANT',
+}
