@@ -7,7 +7,7 @@ Based on the logic of the Ebook-Translator-Calibre-Plugin by bookfere.
 
 Usage:
     python epub_translator.py input.epub -s English -t "Chinese (Simplified)" \
-        --engine google_free --output translated.epub
+        --engine codex --output translated.epub
 
 Dependencies:
     pip install lxml requests
@@ -32,7 +32,7 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Google Free (no API key needed):
+  # Default Codex CLI engine (uses local Codex auth, no API key):
   python epub_translator.py book.epub -t "Chinese (Simplified)"
 
   # OpenAI ChatGPT:
@@ -74,12 +74,12 @@ Supported engines: google_free, google_free_html, chatgpt, codex, claude, gemini
     parser.add_argument('-t', '--target-lang', required=True,
                         help='Target language (e.g., "Chinese (Simplified)", '
                         'Japanese, French)')
-    parser.add_argument('--engine', default='google_free',
+    parser.add_argument('--engine', default='codex',
                         choices=['google_free', 'google_free_html',
                                  'chatgpt', 'codex', 'claude', 'gemini',
                                  'deepl', 'deepl_pro', 'deepl_free',
                                  'argos_local'],
-                        help='Translation engine (default: google_free)')
+                        help='Translation engine (default: codex)')
     parser.add_argument('--api-key', help='API key for the engine')
     parser.add_argument('--model', help='Model name (for LLM engines)')
     parser.add_argument('--endpoint', help='Custom API endpoint URL')

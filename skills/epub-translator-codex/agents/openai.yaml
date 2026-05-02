@@ -1,0 +1,4 @@
+interface:
+  display_name: "EPUB Codex Translation"
+  short_description: "Translate EPUBs with Codex while preserving format."
+  default_prompt: "Translate this EPUB to Chinese with Codex."

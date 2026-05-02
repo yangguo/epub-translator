@@ -112,6 +112,38 @@ class EnginesImportTest(unittest.TestCase):
         self.assertEqual(engine.name, "codex")
         self.assertEqual(engine.target_lang, "Chinese (Simplified)")
 
+    def test_codex_engine_uses_cli_default_model_when_not_configured(self):
+        from engines import get_engine
+
+        engine = get_engine(
+            "codex",
+            source_lang="English",
+            target_lang="Chinese (Simplified)",
+        )
+
+        self.assertIsNone(engine.model)
+
+    def test_codex_engine_translate_omits_model_flag_by_default(self):
+        from engines import get_engine
+
+        engine = get_engine(
+            "codex",
+            source_lang="English",
+            target_lang="Chinese (Simplified)",
+        )
+
+        def fake_run(cmd, input=None, capture_output=None, text=None,
+                     timeout=None, check=None):
+            self.assertNotIn("-m", cmd)
+            output_path = pathlib.Path(
+                cmd[cmd.index("--output-last-message") + 1]
+            )
+            output_path.write_text("你好", encoding="utf-8")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        with mock.patch("engines.subprocess.run", side_effect=fake_run):
+            self.assertEqual(engine.translate("Hello"), "你好")
+
     def test_argos_local_engine_can_be_constructed(self):
         from engines import get_engine
 
@@ -159,6 +191,28 @@ class EnginesImportTest(unittest.TestCase):
         with mock.patch("engines.subprocess.run", side_effect=fake_run):
             self.assertEqual(engine.translate("Hello"), "你好")
 
+    def test_codex_engine_translate_uses_configured_model_flag(self):
+        from engines import get_engine
+
+        engine = get_engine(
+            "codex",
+            source_lang="English",
+            target_lang="Chinese (Simplified)",
+            model="gpt-5.4-mini",
+        )
+
+        def fake_run(cmd, input=None, capture_output=None, text=None,
+                     timeout=None, check=None):
+            self.assertEqual(cmd[cmd.index("-m") + 1], "gpt-5.4-mini")
+            output_path = pathlib.Path(
+                cmd[cmd.index("--output-last-message") + 1]
+            )
+            output_path.write_text("你好", encoding="utf-8")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        with mock.patch("engines.subprocess.run", side_effect=fake_run):
+            self.assertEqual(engine.translate("Hello"), "你好")
+
     def test_cli_help_lists_argos_local_engine(self):
         result = subprocess.run(
             [sys.executable, "epub_translator.py", "--help"],
@@ -171,3 +225,15 @@ class EnginesImportTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("argos_local", result.stdout)
         self.assertIn("codex", result.stdout)
+
+    def test_cli_help_shows_codex_as_default_engine(self):
+        result = subprocess.run(
+            [sys.executable, "epub_translator.py", "--help"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("Translation engine (default: codex)", result.stdout)

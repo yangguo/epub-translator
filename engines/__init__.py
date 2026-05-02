@@ -274,7 +274,8 @@ class CodexTranslate(TranslationEngine):
 
     def __init__(self):
         super().__init__()
-        self.model = 'gpt-5.4'
+        # None means defer to the locally authenticated Codex CLI default.
+        self.model = None
         self.prompt = self.DEFAULT_PROMPT
 
     def _get_prompt(self):
@@ -302,14 +303,21 @@ class CodexTranslate(TranslationEngine):
             if self.model:
                 cmd.extend(['-m', self.model])
 
-            completed = subprocess.run(
-                cmd,
-                input=prompt,
-                capture_output=True,
-                text=True,
-                timeout=self.request_timeout or None,
-                check=False,
-            )
+            try:
+                completed = subprocess.run(
+                    cmd,
+                    input=prompt,
+                    capture_output=True,
+                    text=True,
+                    timeout=self.request_timeout or None,
+                    check=False,
+                )
+            except FileNotFoundError as exc:
+                raise RuntimeError(
+                    'codex is not installed or not on PATH. '
+                    'Install it with `npm install -g @openai/codex` and run '
+                    '`codex login`, or choose a different engine with --engine.'
+                ) from exc
             if completed.returncode != 0:
                 detail = (completed.stderr or completed.stdout or '').strip()
                 raise RuntimeError(

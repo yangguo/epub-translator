@@ -33,8 +33,8 @@ This project extracts XHTML content from an EPUB, translates the text with a sel
 
 - Python 3.9+
 - `lxml`
+- `codex` installed and authenticated for the default engine
 - Optional, depending on engine:
-  - `codex` installed and authenticated for `--engine codex`
   - `argostranslate` with installed language packs for `--engine argos_local`
   - Provider API keys for OpenAI, Anthropic, Gemini, and DeepL API engines
 
@@ -60,7 +60,7 @@ uv run --with argostranslate python epub_translator.py --help
 
 ## Quick Start
 
-Translate with the default free Google engine:
+Translate with the default local Codex CLI engine:
 
 ```bash
 python epub_translator.py book.epub -t "Chinese (Simplified)"
@@ -90,6 +90,9 @@ python epub_translator.py book.epub \
   --engine codex
 ```
 
+By default, the `codex` engine uses the locally authenticated Codex CLI's
+configured model. Pass `--model` only when you want to force a specific model.
+
 Use offline Argos:
 
 ```bash
@@ -103,7 +106,7 @@ uv run --with argostranslate python epub_translator.py book.epub \
 
 - `-t, --target-lang`: required target language
 - `-s, --source-lang`: source language, default `English`
-- `--engine`: translation backend, default `google_free`
+- `--engine`: translation backend, default `codex`
 - `--api-key`: provider API key when required
 - `--model`: model override for LLM engines
 - `--endpoint`: custom endpoint for compatible APIs
