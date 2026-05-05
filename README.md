@@ -12,6 +12,7 @@ This project extracts XHTML content from an EPUB, translates the text with a sel
 - Merge paragraphs to reduce API calls for LLM engines
 - Resume interrupted runs with a SQLite cache
 - Apply glossary substitutions before translation
+- Optionally validate the finished EPUB and write a Markdown report
 - Support online APIs, the local Codex CLI, and offline Argos Translate
 
 ## Supported Engines
@@ -102,6 +103,15 @@ uv run --with argostranslate python epub_translator.py book.epub \
   --engine argos_local
 ```
 
+Generate a validation report after writing the EPUB:
+
+```bash
+python epub_translator.py book.epub \
+  -t "Chinese (Simplified)" \
+  --validate-output \
+  --validation-report book.validation.md
+```
+
 ## Common Options
 
 - `-t, --target-lang`: required target language
@@ -116,6 +126,8 @@ uv run --with argostranslate python epub_translator.py book.epub \
 - `--merge`: merge paragraphs before translation
 - `--merge-length`: max merged payload length
 - `--glossary`: glossary file path
+- `--validate-output`: validate the written EPUB and generate a Markdown report
+- `--validation-report`: override the report path, default is the output path with `.validation.md`
 - `--concurrency`, `--interval`, `--timeout`, `--retries`: engine overrides
 - `--proxy`: HTTP or SOCKS proxy URL
 - `-o, --output`: output EPUB path
@@ -154,6 +166,27 @@ artificial intelligence
 intelligence artificielle
 ```
 
+## Validation Reports
+
+`--validate-output` runs after the output EPUB has already been saved. It compares the source and output EPUB archives and writes a Markdown report. If validation or report writing itself fails, the CLI prints a warning and keeps the saved EPUB; validation is an optional post-write check, not part of the translation transaction.
+
+The validator checks:
+
+- ZIP readability and `mimetype` placement/compression
+- OPF/container parseability and content document discovery
+- Missing or changed non-HTML resources
+- HTML/XML parseability
+- Leaked translation placeholders such as `{{id_...}}`
+- Lightweight structure signatures for `a`, `img`, `picture`, `source`, `h1`, `h2`, `h3`, `div`, `li`, `table`, and `figure`
+
+Report status values:
+
+- `PASS`: no validation findings
+- `REVIEW`: warnings were found, usually structural tag-count changes that need human review
+- `FAIL`: missing resources, broken archives, parse errors, or placeholder leaks were found
+
+The validator ignores ZIP directory entries when comparing resources, because repackaging may omit explicit directory entries without losing actual files.
+
 ## How It Works
 
 1. Extract the EPUB archive to a temporary directory.
@@ -163,6 +196,7 @@ intelligence artificielle
 5. Translate paragraph-by-paragraph or in merged batches.
 6. Restore preserved markup and write the translated content back into the XHTML tree.
 7. Repackage the modified files as a new EPUB.
+8. Optionally validate the saved EPUB and write a Markdown report.
 
 ## Testing
 
@@ -177,7 +211,8 @@ uv run --with lxml python -m unittest discover -s tests
 ```text
 epub_translator.py  CLI entry point
 engines/            Translation engines and language mappings
-lib/                EPUB parsing, extraction, caching, and translation flow
+lib/                EPUB parsing, extraction, caching, translation, validation
+lib/validation/     EPUB archive checks, structure signatures, Markdown reports
 tests/              Unit tests
 ```
 
@@ -187,3 +222,4 @@ tests/              Unit tests
 - `codex` intentionally runs conservatively because each translation goes through the local CLI.
 - `argos_local` only works for language pairs installed in the local Argos environment.
 - Large books generally benefit from `--cache`, and often from `--merge` as well.
+- Validation reports are advisory by default; the current CLI does not return a non-zero exit code for `FAIL` or `REVIEW` validation status.

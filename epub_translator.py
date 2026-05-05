@@ -106,6 +106,13 @@ Supported engines: google_free, google_free_html, chatgpt, codex, claude, gemini
 
     parser.add_argument('--glossary', help='Glossary file path')
 
+    parser.add_argument('--validate-output', action='store_true',
+                        help='Validate the written EPUB and generate a '
+                        'Markdown report')
+    parser.add_argument('--validation-report',
+                        help='Markdown validation report path '
+                        '(default: output.validation.md)')
+
     parser.add_argument('--concurrency', type=int, default=None,
                         help='Concurrency limit (0 = unlimited)')
     parser.add_argument('--interval', type=float, default=None,
@@ -127,6 +134,31 @@ Supported engines: google_free, google_free_html, chatgpt, codex, claude, gemini
 def get_target_language_code(target_lang):
     """Best-effort BCP47-ish metadata code for the translated EPUB."""
     return GOOGLE_LANGS.get(target_lang) or DEEPL_TARGET_LANGS.get(target_lang)
+
+
+def get_default_validation_report_path(output_path):
+    """Return the default Markdown validation report path."""
+    base, _ext = os.path.splitext(output_path)
+    return f"{base}.validation.md"
+
+
+def run_output_validation(input_path, output_path, report_path=None):
+    """Run optional output validation without failing translation output."""
+    from lib.validation.epub_report import (
+        validate_epub_output,
+        write_markdown_report,
+    )
+
+    report_path = report_path or get_default_validation_report_path(output_path)
+    try:
+        result = validate_epub_output(input_path, output_path)
+        write_markdown_report(result, report_path)
+    except Exception as exc:
+        print(f"Warning: Validation could not be completed: {exc}")
+        return None
+
+    print(f"Validation: {result.status.upper()} ({report_path})")
+    return result
 
 
 def main():
@@ -257,6 +289,9 @@ def main():
     # --- 9. Write output EPUB ---
     print(f"Writing output: {args.output}")
     epub.save(args.output)
+    if args.validate_output:
+        run_output_validation(
+            args.input, args.output, args.validation_report)
     print("Done!")
 
     # Cleanup
