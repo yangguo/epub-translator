@@ -124,7 +124,8 @@ python epub_translator.py book.epub \
 - `--cache`: enable SQLite-backed resume support
 - `--cache-dir`: override cache directory
 - `--merge`: merge paragraphs before translation
-- `--merge-length`: max merged payload length
+- `--merge-length`: max merged payload character length
+- `--merge-tokens`: estimated token budget for merged LLM payloads
 - `--glossary`: glossary file path
 - `--validate-output`: validate the written EPUB and generate a Markdown report
 - `--validation-report`: override the report path, default is the output path with `.validation.md`
@@ -194,9 +195,10 @@ The validator ignores ZIP directory entries when comparing resources, because re
 3. Identify translatable XHTML elements.
 4. Replace reserved markup with placeholders before translation.
 5. Translate paragraph-by-paragraph or in merged batches.
-6. Restore preserved markup and write the translated content back into the XHTML tree.
-7. Repackage the modified files as a new EPUB.
-8. Optionally validate the saved EPUB and write a Markdown report.
+6. Validate that structure-preserving placeholders survived translation; retry when they are missing.
+7. Restore preserved markup and write the translated content back into the XHTML tree.
+8. Repackage the modified files as a new EPUB.
+9. Optionally validate the saved EPUB and write a Markdown report.
 
 ## Testing
 
