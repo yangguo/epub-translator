@@ -30,6 +30,26 @@ def trim(text):
     return text.strip()
 
 
+def estimate_token_count(text):
+    """Estimate token count without requiring a model-specific tokenizer.
+
+    This intentionally favors a simple, dependency-free heuristic. CJK
+    characters are counted individually, Latin words are counted as one token,
+    and punctuation/non-space symbols are counted separately. It is not meant to
+    predict billing exactly; it gives merge mode a model-relevant budget that is
+    more stable than raw character length.
+    """
+    if not text:
+        return 0
+    tokens = re.findall(
+        r'[\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]|'
+        r'[A-Za-z0-9]+(?:[\'-][A-Za-z0-9]+)*|'
+        r'[^\s]',
+        text,
+    )
+    return len(tokens)
+
+
 def xml_escape(text):
     """Escape XML special characters."""
     return html_escape(text, quote=False)

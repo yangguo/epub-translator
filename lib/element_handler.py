@@ -7,7 +7,7 @@ including optional paragraph merging for reduced API calls.
 import re
 from typing import Any
 
-from .utils import uid, create_xpath
+from .utils import uid, create_xpath, estimate_token_count
 
 
 class ElementHandler:
@@ -19,7 +19,7 @@ class ElementHandler:
     """
 
     def __init__(self, placeholder, separator, position,
-                 merge_enabled=False, merge_length=1800,
+                 merge_enabled=False, merge_length=1800, merge_tokens=None,
                  original_color=None, translation_color=None,
                  target_direction=None, column_gap=None,
                  remove_rules=None, reserve_rules=None):
@@ -28,6 +28,7 @@ class ElementHandler:
         self.position = position
         self.merge_enabled = merge_enabled
         self.merge_length = merge_length
+        self.merge_tokens = merge_tokens
         self.original_color = original_color
         self.translation_color = translation_color
         self.target_direction = target_direction
@@ -108,7 +109,7 @@ class ElementHandler:
                 element.set_ignored(True)
                 continue
             content += self.separator
-            if len(txt + content) < self.merge_length:
+            if self._within_merge_budget(txt, content):
                 raw += code + self.separator
                 txt += content
                 continue
@@ -122,6 +123,13 @@ class ElementHandler:
             md5 = uid('%s%s' % (oid, txt))
             self.originals.append((oid, md5, raw, txt, False))
         return self.originals
+
+    def _within_merge_budget(self, current, addition):
+        """Return True when adding content keeps the merged unit in budget."""
+        candidate = current + addition
+        if self.merge_tokens is not None:
+            return estimate_token_count(candidate) < self.merge_tokens
+        return len(candidate) < self.merge_length
 
     def prepare_translation(self, paragraphs):
         """Build translation mapping from paragraphs."""

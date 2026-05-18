@@ -50,6 +50,78 @@ class Glossary:
         return content
 
 
+class PlaceholderValidationError(RuntimeError):
+    """Raised when an engine response drops structure-preservation markers."""
+
+
+def _marker_pattern(marker):
+    """Build a permissive regex for placeholders with zero-padded ids."""
+    pattern = []
+    idx = 0
+    while idx < len(marker):
+        if marker[idx] == '0':
+            while idx < len(marker) and marker[idx] == '0':
+                idx += 1
+            pattern.append('0+')
+            continue
+        pattern.append(re.escape(marker[idx]))
+        idx += 1
+    return r'\s*'.join(pattern)
+
+
+def _rendered_template_parts(template):
+    """Return literal prefix/suffix around the template's marker field."""
+    sentinel = '__EPUB_TRANSLATOR_MARKER__'
+    rendered = template.format(sentinel)
+    if sentinel not in rendered:
+        return None
+    return rendered.split(sentinel, 1)
+
+
+def _extract_engine_markers(text, placeholder):
+    """Extract marker ids rendered with an engine placeholder template."""
+    parts = _rendered_template_parts(placeholder[0])
+    if not parts:
+        return []
+    prefix, suffix = parts
+    pattern = re.compile(re.escape(prefix) + r'(.+?)' + re.escape(suffix))
+    return pattern.findall(text or '')
+
+
+def _validate_engine_placeholders(original, translation, placeholder):
+    """Return validation errors for missing reserved placeholders/wrappers."""
+    errors = []
+    for marker in _extract_engine_markers(original, placeholder):
+        pattern = placeholder[1].format(_marker_pattern(marker))
+        if re.search(pattern, translation or '') is None:
+            errors.append(f"missing placeholder {placeholder[0].format(marker)}")
+
+    wrapper_ids = re.findall(
+        r'<\s*x\s+id\s*=\s*["\']?([^"\'>\s]+)["\']?\s*>',
+        original or '',
+        flags=re.IGNORECASE,
+    )
+    for wrapper_id in wrapper_ids:
+        opener = (
+            r'<\s*x\s+id\s*=\s*["\']?' +
+            re.escape(wrapper_id) +
+            r'["\']?\s*>'
+        )
+        if re.search(opener, translation or '', flags=re.IGNORECASE) is None:
+            errors.append(f"missing wrapper <x id=\"{wrapper_id}\">")
+
+    expected_closers = len(re.findall(
+        r'</\s*x\s*>', original or '', flags=re.IGNORECASE))
+    actual_closers = len(re.findall(
+        r'</\s*x\s*>', translation or '', flags=re.IGNORECASE))
+    if actual_closers < expected_closers:
+        errors.append(
+            f"missing wrapper closing tag </x> "
+            f"({actual_closers}/{expected_closers})")
+
+    return errors
+
+
 class Translation:
     """Manages the translation of all paragraphs with retries,
     concurrency, caching, and progress reporting."""
@@ -87,15 +159,38 @@ class Translation:
             paragraph.is_cache = True
             return
 
-        text = self.glossary.replace(paragraph.original)
-        result = self.translate_text(text)
+        max_attempts = max(1, self.translator.request_attempt or 1)
+        validation_errors = []
 
-        # Handle streaming generators
-        if isinstance(result, GeneratorType):
-            result = ''.join(result)
+        for attempt in range(max_attempts):
+            text = self.glossary.replace(paragraph.original)
+            result = self.translate_text(text)
 
-        result = self.glossary.restore(result)
-        paragraph.translation = result.strip()
+            # Handle streaming generators
+            if isinstance(result, GeneratorType):
+                result = ''.join(result)
+
+            result = self.glossary.restore(result).strip()
+            validation_errors = _validate_engine_placeholders(
+                paragraph.original, result, self.translator.placeholder)
+            if not validation_errors:
+                paragraph.translation = result
+                break
+
+            if self.verbose:
+                print(
+                    f"  Placeholder validation failed "
+                    f"({attempt + 1}/{max_attempts}): "
+                    f"{'; '.join(validation_errors[:3])}")
+            if attempt + 1 < max_attempts:
+                interval = max(
+                    0, getattr(self.translator, 'request_interval', 0) or 0)
+                if interval:
+                    time.sleep(interval)
+        else:
+            raise PlaceholderValidationError(
+                "Translation did not preserve required placeholders: " +
+                "; ".join(validation_errors))
 
         # Alignment check for merged paragraphs
         if self.translator.merge_enabled:

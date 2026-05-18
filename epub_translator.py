@@ -58,6 +58,10 @@ Examples:
   python epub_translator.py book.epub -t Korean \\
       --engine chatgpt --api-key sk-xxx --merge --merge-length 2000
 
+  # Token-aware merging for LLM engines:
+  python epub_translator.py book.epub -t Korean \\
+      --engine chatgpt --api-key sk-xxx --merge --merge-tokens 450
+
   # Resume from cache:
   python epub_translator.py book.epub -t Japanese --engine chatgpt \\
       --api-key sk-xxx --cache
@@ -98,7 +102,11 @@ Supported engines: google_free, google_free_html, chatgpt, codex, claude, gemini
     parser.add_argument('--merge', action='store_true',
                         help='Merge paragraphs to reduce API calls')
     parser.add_argument('--merge-length', type=int, default=1800,
-                        help='Max merged content length (default: 1800)')
+                        help='Max merged content character length '
+                        '(default: 1800; ignored when --merge-tokens is set)')
+    parser.add_argument('--merge-tokens', type=int, default=None,
+                        help='Estimated token budget for each merged request '
+                        '(optional; more stable than character length for LLMs)')
 
     parser.add_argument('--cache', action='store_true',
                         help='Enable translation cache (resume support)')
@@ -128,7 +136,13 @@ Supported engines: google_free, google_free_html, chatgpt, codex, claude, gemini
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Verbose output')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.merge_tokens is not None:
+        if not args.merge:
+            parser.error('--merge-tokens requires --merge')
+        if args.merge_tokens < 1:
+            parser.error('--merge-tokens must be a positive integer')
+    return args
 
 
 def get_target_language_code(target_lang):
@@ -224,6 +238,7 @@ def main():
         position=args.position,
         merge_enabled=args.merge,
         merge_length=args.merge_length,
+        merge_tokens=args.merge_tokens,
         original_color=args.original_color,
         translation_color=args.translation_color,
     )
@@ -247,6 +262,7 @@ def main():
     cache_id = uid(
         _file_hash(args.input), args.engine, args.source_lang,
         args.target_lang, str(args.merge_length if args.merge else 0),
+        str(args.merge_tokens if args.merge and args.merge_tokens else 0),
         args.model or '', args.prompt or '', args.endpoint or '',
         _file_hash(args.glossary) if args.glossary else '')
     cache_dir = args.cache_dir or os.path.join(
